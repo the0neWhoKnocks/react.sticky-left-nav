@@ -1,8 +1,8 @@
 import React from 'react';
-import GridItem from '../GridItem';
+import Product from '../Product';
 
 export default ({ items }) => (
-  <div>
-    {items.map((item, ndx) => <GridItem key={ndx} {...item} />)}
+  <div className="results">
+    {items.map((item, ndx) => <Product key={ndx} {...item} />)}
   </div>
 );
