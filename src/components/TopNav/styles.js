@@ -4,9 +4,10 @@ export default {
   root: css({
     textAlign: 'center',
     padding: '1em',
-    border: 'solid 1px #ccc',
+    borderBottom: 'solid 1px #ccc',
+    boxShadow: '0 0 1em 0.5em #00000020',
     background: '#eee',
-    position: 'absolute',
+    position: 'fixed',
     top: 0,
     left: 0,
     right: 0,
@@ -14,7 +15,6 @@ export default {
 
     ' a': {
       color: '#333',
-      fontWeight: 'bold',
       textDecoration: 'none',
       textTransform: 'uppercase',
       padding: '1em',

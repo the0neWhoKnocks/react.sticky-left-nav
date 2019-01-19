@@ -1,7 +1,5 @@
-const item = {
+export default Array(24).fill().map(() => ({
   title: 'Title',
   subtitle: 'Sub Title',
   price: '$100',
-};
-
-module.exports = Array(24).fill(item);
+}));

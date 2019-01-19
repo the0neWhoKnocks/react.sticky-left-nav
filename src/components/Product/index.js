@@ -8,7 +8,7 @@ export default ({
   subtitle,
   title,
 }) => (
-  <div className={`grid-item ${styles.root}`}>
+  <div className={`product ${styles.root}`}>
     <img src={emptyImg} alt="Item" />
     <h4>{title}</h4>
     <h6>{subtitle}</h6>

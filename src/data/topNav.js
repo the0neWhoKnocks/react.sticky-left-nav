@@ -1,4 +1,4 @@
-module.exports = [
+export default [
   {
     label: 'Men',
     url: 'https://site.com/page/mens',
