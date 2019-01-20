@@ -1,4 +1,4 @@
-export default Array(24).fill().map(() => ({
+export default (count) => Array(count).fill().map(() => ({
   title: 'Title',
   subtitle: 'Sub Title',
   price: '$100',

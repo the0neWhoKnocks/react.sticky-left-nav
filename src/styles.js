@@ -1,8 +1,10 @@
 import {css} from 'glamor';
 
+const diagonalLineThickness = 3;
 export default {
   root: css({
     font: '16px Helvetica, Arial, sans-serif',
+    position: 'relative',
 
     ' .body': {
       paddingTop: '3.3em',
@@ -38,17 +40,35 @@ export default {
       },
     },
 
-    ' .left-nav': {
+    ' .left-nav-wrapper': {
       minWidth: '200px',
       padding: '0.3em 0 1em 1em',
+
+      ' .left-nav': {
+        background: '#fff',
+      },
     },
 
     ' .results': {
+      flex: 1,
       paddingLeft: '1em',
     },
 
     ' .footer': {
       marginTop: '2em',
-    }
+    },
+
+    '.debug': {
+      ' .left-nav-wrapper': {
+        backgroundColor: 'gray',
+        backgroundImage: `repeating-linear-gradient(
+          -45deg,
+          #ddd,
+          #ddd ${diagonalLineThickness}px,
+          #fff ${diagonalLineThickness}px,
+          #fff ${diagonalLineThickness * 3}px
+        )`,
+      },
+    },
   }),
 };
