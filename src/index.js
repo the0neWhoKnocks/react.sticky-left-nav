@@ -138,7 +138,9 @@ class App extends Component {
     this.handleFilterCountChange = this.handleFilterCountChange.bind(this);
     this.handleFilterChildCountChange = this.handleFilterChildCountChange.bind(this);
     this.handleHeaderIntersection = this.handleHeaderIntersection.bind(this);
+    this.handleNavIntersection = this.handleNavIntersection.bind(this);
     this.handleProductCountChange = this.handleProductCountChange.bind(this);
+    this.handleScroll = this.handleScroll.bind(this);
   }
 
   componentDidMount() {
@@ -148,6 +150,7 @@ class App extends Component {
   init() {
     this.headerH = this.headerRef.current.offsetHeight;
     this.topNavH = this.topNavRef.current.offsetHeight;
+
     this.headerObserver = new IntersectionObserver(
       this.handleHeaderIntersection,
       {
@@ -155,18 +158,33 @@ class App extends Component {
         threshold: 1,
       }
     );
-
     this.headerObserver.observe(document.querySelector('.results-header-placeholder'));
 
+    this.navObserver = new IntersectionObserver(
+      this.handleNavIntersection,
+      {
+        rootMargin: `-${this.topNavH + this.headerH}px 0px 0px 0px`,
+        threshold: 0,
+      }
+    );
+    this.navObserver.observe(document.querySelector('.left-nav__wrapper-top-point'));
+    this.navObserver.observe(document.querySelector('.left-nav__wrapper-btm-point'));
+    this.navObserver.observe(document.querySelector('.left-nav__top-point'));
+    this.navObserver.observe(document.querySelector('.left-nav__btm-point'));
+
+    window.addEventListener('scroll', this.handleScroll, false);
+
     this.setState(App.generateData({
+      ...App.getStateFromQueryString(this.state),
       headerH: this.headerH,
       topNavH: this.topNavH,
-      ...App.getStateFromQueryString(this.state),
     }));
   }
 
   componentWillUnmount() {
+    window.removeEventListener('scroll', this.handleScroll);
     this.headerObserver.disconnect();
+    this.navObserver.disconnect();
   }
 
   handleDebugToggle() {
@@ -194,6 +212,20 @@ class App extends Component {
         topNavIsSticky: false,
       });
     }
+  }
+
+  handleNavIntersection(entries) {
+    if(!this.points) this.points = {};
+
+    entries.forEach((entry) => {
+      const type = entry.target.dataset.type;
+
+      if(!this.points[type]) this.points[type] = {};
+      this.points[type].visible = !!entry.intersectionRatio;
+
+    });
+
+    console.log(this.scrollDirection, this.points);
   }
 
   handleProductCountChange(productCount) {
@@ -236,6 +268,11 @@ class App extends Component {
       name: 'filterChildCount',
       value: filterChildCount,
     }));
+  }
+
+  handleScroll(ev) {
+    this.scrollDirection = (this.prevScroll > window.scrollY) ? 'up' : 'down';
+    this.prevScroll = window.scrollY;
   }
 
   render() {
