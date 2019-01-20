@@ -3,6 +3,18 @@ import Collapsible from 'react-collapsible';
 import styles from "./styles";
 
 class LeftNav extends Component {
+  static getDerivedStateFromProps(props, state){
+    const currentFilters = JSON.stringify(state.filters);
+    const newFilters = JSON.stringify(props.filters);
+    const newState = {};
+
+    if(currentFilters !== newFilters){
+      newState.filters = props.filters;
+    }
+
+    return (Object.keys(newState).length > 0) ? newState : null;
+  }
+
   constructor(props) {
     super();
 
@@ -96,7 +108,10 @@ class LeftNav extends Component {
               </Collapsible>
             );
           })}
-          <button className="left-nav__clear-btn">
+          <button
+            className="left-nav__clear-btn"
+            disabled={!showClearFilters}
+          >
             Clear Filters
           </button>
         </nav>

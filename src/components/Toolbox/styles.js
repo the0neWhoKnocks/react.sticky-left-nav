@@ -15,7 +15,12 @@ export default {
 
     ' label': {
       margin: '0.5em',
-      
+      userSelect: 'none',
+
+      ' > .label-text': {
+        flex: 1,
+      },
+
       ' > input': {
         marginLeft: '0.5em',
       },
@@ -73,7 +78,7 @@ export default {
         },
 
         '&__tools > *': {
-          display: 'block',
+          display: 'flex',
         },
       },
 
