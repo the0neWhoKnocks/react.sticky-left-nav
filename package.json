@@ -11,12 +11,20 @@
     "react-dom": "16.5.2",
     "react-scripts": "2.0.3"
   },
-  "devDependencies": {},
+  "repository": {
+    "type": "git",
+    "url": "git+https://the0newhoknocks.github.io/react.sticky-left-nav"
+  },
+  "homepage" : "https://the0newhoknocks.github.io/react.sticky-left-nav/",
+  "devDependencies": {
+    "gh-pages": "^2.0.1"
+  },
   "scripts": {
-    "start": "react-scripts start",
     "build": "react-scripts build",
-    "test": "react-scripts test --env=jsdom",
-    "eject": "react-scripts eject"
+    "deploy": "yarn build && gh-pages -d ./build",
+    "eject": "react-scripts eject",
+    "start": "react-scripts start",
+    "test": "react-scripts test --env=jsdom"
   },
   "browserslist": [
     ">0.2%",
