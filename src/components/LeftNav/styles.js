@@ -7,12 +7,16 @@ const link = {
   padding: '0 0 0.4em',
   display: 'block',
 };
+const filterFocusIndicatorWidth = 4;
+const filterFocusIndicatorOffset = 8;
 export default {
   root: css({
     position: 'relative',
 
     ' .left-nav': {
       paddingBottom: '3em',
+      paddingLeft: `${filterFocusIndicatorWidth + filterFocusIndicatorOffset}px`,
+      marginLeft: `-${filterFocusIndicatorWidth + filterFocusIndicatorOffset}px`,
       overflow: 'hidden',
       position: 'relative',
 
@@ -37,8 +41,18 @@ export default {
           content: '\\002B',
           position: 'absolute',
           top: '50%',
-          right: '0',
+          right: 0,
           transform: 'translateY(-50%)',
+        },
+
+        ':focus::before': {
+          content: `''`,
+          width: `${filterFocusIndicatorWidth}px`,
+          background: '#333',
+          position: 'absolute',
+          top: '25%',
+          bottom: '25%',
+          left: `-${filterFocusIndicatorOffset}px`,
         },
 
         '.is--open::after': {

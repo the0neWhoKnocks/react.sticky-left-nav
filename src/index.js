@@ -44,7 +44,10 @@ class App extends Component {
     this.headerRef = createRef();
     this.topNavRef = createRef();
 
+    this.handleCategoryCountChange = this.handleCategoryCountChange.bind(this);
     this.handleDebugToggle = this.handleDebugToggle.bind(this);
+    this.handleFilterCountChange = this.handleFilterCountChange.bind(this);
+    this.handleFilterChildCountChange = this.handleFilterChildCountChange.bind(this);
     this.handleHeaderIntersection = this.handleHeaderIntersection.bind(this);
     this.handleProductCountChange = this.handleProductCountChange.bind(this);
   }
@@ -104,11 +107,41 @@ class App extends Component {
     });
   }
 
+  handleCategoryCountChange(categoryCount) {
+    this.setState({
+      categoryCount,
+      categories: genCategories(categoryCount),
+    });
+  }
+
+  handleFilterCountChange(filterCount) {
+    this.setState({
+      filterCount,
+      filters: genFilters(
+        filterCount,
+        this.state.filterChildCount,
+      ),
+    });
+  }
+
+  handleFilterChildCountChange(filterChildCount) {
+    this.setState({
+      filterChildCount,
+      filters: genFilters(
+        this.state.filterCount,
+        filterChildCount,
+      ),
+    });
+  }
+
   render() {
     const {
       categories,
+      categoryCount,
       debug,
       filters,
+      filterCount,
+      filterChildCount,
       headerH,
       productCount,
       products,
@@ -169,6 +202,24 @@ class App extends Component {
             min={1}
             onChange={this.handleProductCountChange}
             value={productCount}
+          />
+          <Tools.Number
+            label="Category Count"
+            min={1}
+            onChange={this.handleCategoryCountChange}
+            value={categoryCount}
+          />
+          <Tools.Number
+            label="Filters Count"
+            min={1}
+            onChange={this.handleFilterCountChange}
+            value={filterCount}
+          />
+          <Tools.Number
+            label="Filters Child Count"
+            min={1}
+            onChange={this.handleFilterChildCountChange}
+            value={filterChildCount}
           />
         </Toolbox>
       </Fragment>

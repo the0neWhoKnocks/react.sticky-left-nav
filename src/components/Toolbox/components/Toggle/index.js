@@ -6,7 +6,7 @@ export default ({
   toggled,
 }) => (
   <label>
-    {label}
+    <span className="label-text">{label}</span>
     <input type="checkbox" onChange={onChange} checked={toggled}/>
   </label>
 );

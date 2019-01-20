@@ -25,7 +25,7 @@ class Number extends Component {
 
     return (
       <label>
-        {label}
+        <span className="label-text">{label}</span>
         <input type="number" onChange={this.sanitize} value={value}/>
       </label>
     );
