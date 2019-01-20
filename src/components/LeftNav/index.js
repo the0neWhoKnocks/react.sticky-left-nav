@@ -1,5 +1,6 @@
 import React, { Component } from "react";
 import Collapsible from 'react-collapsible';
+import Point from '../Point';
 import styles from "./styles";
 
 class LeftNav extends Component {
@@ -59,7 +60,9 @@ class LeftNav extends Component {
 
     return (
       <div className={`left-nav-wrapper ${styles.root}`}>
+        <Point className="left-nav__wrapper-top-point" type="wrapperTop" />
         <nav className={`left-nav ${navModifier}`}>
+          <Point className="left-nav__top-point" type="navTop" />
           {categories.map((item, ndx) => (
             <a
               key={ndx}
@@ -114,7 +117,10 @@ class LeftNav extends Component {
           >
             Clear Filters
           </button>
+          <Point className="left-nav__btm-point" type="navBtm" />
         </nav>
+
+        <Point className="left-nav__wrapper-btm-point" type="wrapperBtm" />
       </div>
     );
   }
