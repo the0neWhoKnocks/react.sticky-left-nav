@@ -1,3 +1,5 @@
+/* eslint-disable default-case */
+
 import React, {
   createRef,
   Component,
@@ -19,27 +21,114 @@ import {
 import genProducts from './data/products';
 import topNavData from './data/topNav';
 
+const CATEGORY_COUNT = 10;
+const FILTER_COUNT = 3;
+const FILTER_CHILD_COUNT = 5;
+const PRODUCT_COUNT = 24;
+
 class App extends Component {
+  static parseQueryParams(params) {
+    const ret = {};
+
+    params.replace(/^\?/, '').split('&').forEach((param) => {
+      const data = param.split('=');
+      ret[data[0]] = data[1];
+    });
+
+    return ret;
+  }
+
+  static updateQuery({ _default, name, value }) {
+    return () => {
+      const rawParams = window.location.search;
+      const updatedParams = [];
+
+      // If there current params, determine if they need to be updated or removed
+      if(rawParams){
+        const params = App.parseQueryParams(rawParams);
+
+        if(
+          // doesn't exist, add it
+          !params[name]
+          // exists, and value doesn't equal default
+          || value !== _default
+        ){
+          params[name] = value;
+        }
+        // exists, but it's the default, so kill it
+        else if(params[name]){
+          delete params[name];
+        }
+
+        Object.keys(params).forEach((name) => {
+          updatedParams.push(`${name}=${params[name]}`);
+        });
+      }
+      // If there are no params, just add
+      else {
+        updatedParams.push(`${name}=${value}`);
+      }
+
+      const paramsString = (updatedParams.length)
+        ? `?${updatedParams.join('&')}`
+        : '';
+      window.history.replaceState({}, '', `${window.location.pathname}${paramsString}`);
+    };
+  }
+
+  static getStateFromQueryString(state) {
+    const _state = { ...state };
+    const params = App.parseQueryParams(window.location.search);
+
+    Object.keys(params).forEach((name) => {
+      if(_state[name] !== undefined) {
+        // ensure params are typecast back to their original types
+        const prevVal = _state[name];
+        let newVal = params[name];
+
+        switch(typeof prevVal){
+          case 'boolean':
+            newVal = Boolean(newVal);
+            break;
+          case 'number':
+            newVal = +newVal;
+            break;
+        }
+
+        _state[name] = newVal;
+      }
+    });
+
+    return _state;
+  }
+
+  static generateData(state) {
+    const _state = { ...state };
+
+    if(_state.categoryCount) _state.categories = genCategories(_state.categoryCount);
+    if(_state.filterCount && _state.filterChildCount) _state.filters = genFilters(
+      _state.filterCount,
+      _state.filterChildCount,
+    );
+    if(_state.productCount) _state.products = genProducts(_state.productCount);
+
+    return _state;
+  }
+
   constructor() {
     super();
 
-    this.state = {
-      categoryCount: 10,
+    this.state = App.generateData({
+      categoryCount: CATEGORY_COUNT,
       debug: false,
-      filterCount: 3,
-      filterChildCount: 5,
+      filterCount: FILTER_COUNT,
+      filterChildCount: FILTER_CHILD_COUNT,
       headerH: 0,
-      productCount: 24,
+      productCount: PRODUCT_COUNT,
       shelfOpened: false,
       topNavH: 0,
       topNavIsSticky: false,
-    };
-    this.state.categories = genCategories(this.state.categoryCount);
-    this.state.filters = genFilters(
-      this.state.filterCount,
-      this.state.filterChildCount,
-    );
-    this.state.products = genProducts(this.state.productCount);
+    });
 
     this.headerRef = createRef();
     this.topNavRef = createRef();
@@ -69,10 +158,11 @@ class App extends Component {
 
     this.headerObserver.observe(document.querySelector('.results-header-placeholder'));
 
-    this.setState({
+    this.setState(App.generateData({
       headerH: this.headerH,
       topNavH: this.topNavH,
-    });
+      ...App.getStateFromQueryString(this.state),
+    }));
   }
 
   componentWillUnmount() {
@@ -80,9 +170,15 @@ class App extends Component {
   }
 
   handleDebugToggle() {
+    const debug = !this.state.debug;
+
     this.setState({
-      debug: !this.state.debug,
-    });
+      debug,
+    }, App.updateQuery({
+      _default: false,
+      name: 'debug',
+      value: debug,
+    }));
   }
 
   handleHeaderIntersection(entries) {
@@ -101,37 +197,45 @@ class App extends Component {
   }
 
   handleProductCountChange(productCount) {
-    this.setState({
+    this.setState(App.generateData({
       productCount,
-      products: genProducts(productCount),
-    });
+    }), App.updateQuery({
+      _default: PRODUCT_COUNT,
+      name: 'productCount',
+      value: productCount,
+    }));
   }
 
   handleCategoryCountChange(categoryCount) {
-    this.setState({
+    this.setState(App.generateData({
       categoryCount,
-      categories: genCategories(categoryCount),
-    });
+    }), App.updateQuery({
+      _default: CATEGORY_COUNT,
+      name: 'categoryCount',
+      value: categoryCount,
+    }));
   }
 
   handleFilterCountChange(filterCount) {
-    this.setState({
+    this.setState(App.generateData({
       filterCount,
-      filters: genFilters(
-        filterCount,
-        this.state.filterChildCount,
-      ),
-    });
+      filterChildCount: this.state.filterChildCount,
+    }), App.updateQuery({
+      _default: FILTER_COUNT,
+      name: 'filterCount',
+      value: filterCount,
+    }));
   }
 
   handleFilterChildCountChange(filterChildCount) {
-    this.setState({
+    this.setState(App.generateData({
+      filterCount: this.state.filterCount,
       filterChildCount,
-      filters: genFilters(
-        this.state.filterCount,
-        filterChildCount,
-      ),
-    });
+    }), App.updateQuery({
+      _default: FILTER_CHILD_COUNT,
+      name: 'filterChildCount',
+      value: filterChildCount,
+    }));
   }
 
   render() {
