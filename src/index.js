@@ -222,10 +222,7 @@ class App extends Component {
 
       if(!this.points[type]) this.points[type] = {};
       this.points[type].visible = !!entry.intersectionRatio;
-
     });
-
-    console.log(this.scrollDirection, this.points);
   }
 
   handleProductCountChange(productCount) {
@@ -270,9 +267,45 @@ class App extends Component {
     }));
   }
 
-  handleScroll(ev) {
-    this.scrollDirection = (this.prevScroll > window.scrollY) ? 'up' : 'down';
+  handleScroll() {
+    const scrollDirection = (this.prevScroll > window.scrollY) ? 'up' : 'down';
     this.prevScroll = window.scrollY;
+
+    console.log(scrollDirection, JSON.stringify(this.points, null, 2));
+
+    // NOTE - Use `fixed` position when stuck, use transform when
+    //        transitioning between stick points.
+    // NOTE - Top stickPoint will be an element's Y position plus it's height.
+    // NOTE - Bottom stickPoint will be the viewport height, unless the
+    //        wrapper's bottom is in view, the it'll be the wrapper's bottom.
+    // TODO - Might be able to calculate everything based off of page scrollY
+    //        offset and wrapper's Y offset and height.
+
+    // Below, is in order of operation.
+
+    // DOWN ==================================================================
+      // [transition]
+      // IF - Wrapper bottom is not in view, AND nav bottom is not in view,
+      //      increment the Y offset based on scroll distance.
+
+      // [lock]
+      // IF - Wrapper bottom is not in view, AND nav bottom is in view, stick to
+      //      bottom stickPoint.
+
+      // [lock]
+      // IF - Wrapper bottom is in view, stick to wrapper bottom.
+
+    // UP ====================================================================
+      // [transition]
+      // IF - Wrapper top is not in view, AND nav top is not in view,
+      //      increment the Y offset based on scroll distance.
+
+      // [lock]
+      // IF - Wrapper top is not in view, AND nav top is in view, stick to
+      //      top stickPoint.
+
+      // [lock]
+      // IF - Wrapper top is in view, stick to wrapper top.
   }
 
   render() {
