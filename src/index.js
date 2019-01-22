@@ -26,6 +26,13 @@ const FILTER_COUNT = 3;
 const FILTER_CHILD_COUNT = 5;
 const PRODUCT_COUNT = 24;
 
+const stickySupported = () => {
+  const el = document.createElement('a');
+  const mStyle = el.style;
+  mStyle.cssText = "position:sticky;position:-webkit-sticky;position:-ms-sticky;";
+  return mStyle.position.indexOf('sticky') !== -1;
+};
+
 class App extends Component {
   static parseQueryParams(params) {
     const ret = {};
@@ -126,18 +133,16 @@ class App extends Component {
       headerH: 0,
       productCount: PRODUCT_COUNT,
       shelfOpened: false,
-      topNavH: 0,
-      topNavIsSticky: false,
     });
 
     this.headerRef = createRef();
     this.topNavRef = createRef();
 
+    this.controlHeaderPosition = this.controlHeaderPosition.bind(this);
     this.handleCategoryCountChange = this.handleCategoryCountChange.bind(this);
     this.handleDebugToggle = this.handleDebugToggle.bind(this);
     this.handleFilterCountChange = this.handleFilterCountChange.bind(this);
     this.handleFilterChildCountChange = this.handleFilterChildCountChange.bind(this);
-    this.handleHeaderIntersection = this.handleHeaderIntersection.bind(this);
     this.handleNavIntersection = this.handleNavIntersection.bind(this);
     this.handleProductCountChange = this.handleProductCountChange.bind(this);
     this.handleScroll = this.handleScroll.bind(this);
@@ -150,15 +155,10 @@ class App extends Component {
   init() {
     this.headerH = this.headerRef.current.offsetHeight;
     this.topNavH = this.topNavRef.current.offsetHeight;
-
-    this.headerObserver = new IntersectionObserver(
-      this.handleHeaderIntersection,
-      {
-        rootMargin: `-${this.topNavH}px 0px 0px 0px`,
-        threshold: 1,
-      }
-    );
-    this.headerObserver.observe(document.querySelector('.results-header-placeholder'));
+    this.maxHeaderY = this.topNavH;
+    
+    this.headerRef.current.style.top = `${this.maxHeaderY}px`;
+    this.headerRef.current.classList.add('sticky');
 
     this.navObserver = new IntersectionObserver(
       this.handleNavIntersection,
@@ -173,17 +173,19 @@ class App extends Component {
     this.navObserver.observe(document.querySelector('.left-nav__btm-point'));
 
     window.addEventListener('scroll', this.handleScroll, false);
-
+    
+    if(!stickySupported()){
+      window.Stickyfill.add(document.querySelectorAll('.sticky'));
+    }
+    
     this.setState(App.generateData({
       ...App.getStateFromQueryString(this.state),
       headerH: this.headerH,
-      topNavH: this.topNavH,
     }));
   }
 
   componentWillUnmount() {
     window.removeEventListener('scroll', this.handleScroll);
-    this.headerObserver.disconnect();
     this.navObserver.disconnect();
   }
 
@@ -198,22 +200,7 @@ class App extends Component {
       value: debug,
     }));
   }
-
-  handleHeaderIntersection(entries) {
-    const header = entries[0];
-
-    if(header.intersectionRatio < 1){
-      this.setState({
-        topNavIsSticky: true,
-      });
-    }
-    else {
-      this.setState({
-        topNavIsSticky: false,
-      });
-    }
-  }
-
+  
   handleNavIntersection(entries) {
     if(!this.points) this.points = {};
 
@@ -268,11 +255,11 @@ class App extends Component {
   }
 
   handleScroll() {
-    const scrollDirection = (this.prevScroll > window.scrollY) ? 'up' : 'down';
-    this.prevScroll = window.scrollY;
-
-    console.log(scrollDirection, JSON.stringify(this.points, null, 2));
-
+    const scrollDirection = (this.prevScroll > window.pageYOffset) ? 'up' : 'down';
+    this.prevScroll = window.pageYOffset;
+    
+    this.controlHeaderPosition();
+    
     // NOTE - Use `fixed` position when stuck, use transform when
     //        transitioning between stick points.
     // NOTE - Top stickPoint will be an element's Y position plus it's height.
@@ -307,6 +294,24 @@ class App extends Component {
       // [lock]
       // IF - Wrapper top is in view, stick to wrapper top.
   }
+  
+  controlHeaderPosition() {
+    // NOTE - setting attributes directly on element since React doesn't
+    // update the DOM fast enough, which results in choppy paint when the header
+    // becomes (un)locked.
+    
+    // TODO - Update `maxHeaderY` if that value is based of responsive elements
+    // that could change height after a `resize`.
+    
+    if(window.pageYOffset >= this.maxHeaderY){
+      this.headerRef.current.classList.add('is--sticky');
+      this.headerIsLocked = true;
+    }
+    else if(this.headerIsLocked) {
+      this.headerRef.current.classList.remove('is--sticky');
+      this.headerIsLocked = false;
+    }
+  }
 
   render() {
     const {
@@ -319,21 +324,8 @@ class App extends Component {
       headerH,
       productCount,
       products,
-      topNavH,
-      topNavIsSticky,
     } = this.state;
-    const placeholderStyles = {
-      height: `${headerH}px`,
-    };
     let appModifier = '';
-    let headerClass, headerStyles;
-
-    if(topNavIsSticky){
-      headerClass = 'is--sticky';
-      headerStyles = {
-        top: `${topNavH}px`,
-      };
-    }
 
     if(debug){
       appModifier += ' debug';
@@ -341,7 +333,7 @@ class App extends Component {
 
     return (
       <Fragment>
-        <div className={`${styles.root} ${appModifier}`}>
+        <div className={`${styles.app} ${appModifier}`}>
           <TopNav
             items={topNavData}
             ref={this.topNavRef}
@@ -349,9 +341,6 @@ class App extends Component {
           <div className="body">
             <Banner />
             <ResultsHeader
-              headerClass={headerClass}
-              headerStyles={headerStyles}
-              placeholderStyles={placeholderStyles}
               ref={this.headerRef}
               title="Results Title"
             />
@@ -365,7 +354,10 @@ class App extends Component {
           </div>
           <Footer />
         </div>
-        <Toolbox position={DOCK_TO_RIGHT}>
+        <Toolbox
+          className={`${styles.toolbox}`}
+          position={DOCK_TO_RIGHT}
+        >
           <Tools.Toggle
             label="Debug"
             onChange={this.handleDebugToggle}

@@ -6,7 +6,6 @@ export default {
     padding: '1em',
     display: 'flex',
     background: '#fff',
-    zIndex: 1,
 
     ' .results-header': {
 

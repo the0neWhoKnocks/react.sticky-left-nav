@@ -18,7 +18,7 @@ export default {
       userSelect: 'none',
 
       ' > .label-text': {
-        flex: 1,
+        flex: '1 0 0',
       },
 
       ' > input': {
