@@ -16,11 +16,17 @@ for(let i=0; i<4; i++){
 crosshair = crosshair.join(',');
 
 const diagonalLineThickness = 3;
+const LAYER1_INDEX = 9;
+const LAYER2_INDEX = 10;
 export default {
-  root: css({
+  app: css({
     font: '16px Helvetica, Arial, sans-serif',
     position: 'relative',
-
+    
+    ' .top-nav': {
+      zIndex: LAYER2_INDEX,
+    },
+    
     ' .body': {
       paddingTop: '3.3em',
       position: 'relative',
@@ -37,6 +43,9 @@ export default {
     },
 
     ' .results-header': {
+      position: 'sticky',
+      left: 0,
+      zIndex: LAYER1_INDEX,
 
       '&__title': {
         transform: 'scale(1)',
@@ -45,9 +54,6 @@ export default {
       },
 
       '.is--sticky': {
-        position: 'fixed',
-        left: 0,
-        right: 0,
 
         ' .results-header__title': {
           transform: 'scale(0.75)',
@@ -130,5 +136,9 @@ export default {
         },
       },
     },
+  }),
+  
+  toolbox: css({
+    zIndex: LAYER2_INDEX,
   }),
 };

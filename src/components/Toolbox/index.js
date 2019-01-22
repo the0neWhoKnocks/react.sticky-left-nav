@@ -30,6 +30,7 @@ class Toolbox extends Component {
   render() {
     const {
       children,
+      className,
       position,
     } = this.props;
     const {
@@ -40,7 +41,7 @@ class Toolbox extends Component {
     if(opened) modifiers += ' is--open';
 
     return (
-      <div className={`toolbox ${styles.root} ${modifiers}`}>
+      <div className={`toolbox ${styles.root} ${className} ${modifiers}`}>
         <button
           className="toolbox__toggle-btn"
           onClick={this.handleOpenClick}
