@@ -46,6 +46,9 @@ export default {
       position: 'sticky',
       left: 0,
       zIndex: LAYER1_INDEX,
+      // Accounts for pixel offset in webkit browsers, which was allowing for
+      // child content to be visible underneath as you scroll. :\
+      boxShadow: '0 -2px 0 0 #fff',
 
       '&__title': {
         transform: 'scale(1)',
@@ -63,10 +66,11 @@ export default {
 
     ' .left-nav-wrapper': {
       minWidth: '200px',
-      padding: '0.3em 0 1em 1em',
+      padding: '0 0 1em 1em',
     },
 
     ' .left-nav': {
+      paddingTop: '0.3em',
       background: '#fff',
 
       '&__wrapper-top-point,&__top-point,&__wrapper-btm-point,&__btm-point': {
@@ -91,11 +95,18 @@ export default {
 
     ' .footer': {
       marginTop: '2em',
+      // addresses a FOC when the nav sometimes flashes above the footer
+      position: 'relative',
+      zIndex: LAYER2_INDEX,
     },
 
     '.debug': {
+      ' .results-header': {
+        opacity: 0.75,
+      },
+      
       ' .left-nav-wrapper': {
-        backgroundColor: 'gray',
+        backgroundColor: '#ddd',
         backgroundImage: `repeating-linear-gradient(
           -45deg,
           #ddd,

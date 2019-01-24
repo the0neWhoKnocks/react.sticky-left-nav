@@ -1,4 +1,4 @@
-import React, { Component } from "react";
+import React, { forwardRef, Component } from "react";
 import Collapsible from 'react-collapsible';
 import Point from '../Point';
 import styles from "./styles";
@@ -51,7 +51,10 @@ class LeftNav extends Component {
   }
 
   render() {
-    const { categories } = this.props;
+    const {
+      categories,
+      navRef,
+    } = this.props;
     const {
       filters,
       showClearFilters,
@@ -61,7 +64,10 @@ class LeftNav extends Component {
     return (
       <div className={`left-nav-wrapper ${styles.root}`}>
         <Point className="left-nav__wrapper-top-point" type="wrapperTop" />
-        <nav className={`left-nav ${navModifier}`}>
+        <nav
+          className={`left-nav ${navModifier}`}
+          ref={navRef}
+        >
           <Point className="left-nav__top-point" type="navTop" />
           {categories.map((item, ndx) => (
             <a
@@ -126,4 +132,4 @@ class LeftNav extends Component {
   }
 }
 
-export default LeftNav;
+export default forwardRef((props, ref) => (<LeftNav {...props} navRef={ref} />));

@@ -130,12 +130,12 @@ class App extends Component {
       debug: false,
       filterCount: FILTER_COUNT,
       filterChildCount: FILTER_CHILD_COUNT,
-      headerH: 0,
       productCount: PRODUCT_COUNT,
       shelfOpened: false,
     });
 
     this.headerRef = createRef();
+    this.leftNavRef = createRef();
     this.topNavRef = createRef();
 
     this.controlHeaderPosition = this.controlHeaderPosition.bind(this);
@@ -156,9 +156,14 @@ class App extends Component {
     this.headerH = this.headerRef.current.offsetHeight;
     this.topNavH = this.topNavRef.current.offsetHeight;
     this.maxHeaderY = this.topNavH;
+    this.leftNavW = this.leftNavRef.current.offsetWidth;
     
     this.headerRef.current.style.top = `${this.maxHeaderY}px`;
     this.headerRef.current.classList.add('sticky');
+    
+    // width has to be set because when the nav switches to a `fixed` width,
+    // the `flex` styling shrinks 
+    this.leftNavRef.current.style.width = `${this.leftNavW}px`;
 
     this.navObserver = new IntersectionObserver(
       this.handleNavIntersection,
@@ -180,7 +185,6 @@ class App extends Component {
     
     this.setState(App.generateData({
       ...App.getStateFromQueryString(this.state),
-      headerH: this.headerH,
     }));
   }
 
@@ -203,13 +207,25 @@ class App extends Component {
   
   handleNavIntersection(entries) {
     if(!this.points) this.points = {};
+    let pointsVisible = false;
 
     entries.forEach((entry) => {
       const type = entry.target.dataset.type;
 
       if(!this.points[type]) this.points[type] = {};
+      
       this.points[type].visible = !!entry.intersectionRatio;
+      
+      if(this.points[type].visible) {
+        this.points[type].bottom = entry.boundingClientRect.bottom;
+        this.points[type].y = entry.boundingClientRect.y;
+        pointsVisible = true;
+      }
     });
+    
+    this.points.pointsVisible = pointsVisible;
+    
+    this.controlNavPosition();
   }
 
   handleProductCountChange(productCount) {
@@ -255,11 +271,31 @@ class App extends Component {
   }
 
   handleScroll() {
-    const scrollDirection = (this.prevScroll > window.pageYOffset) ? 'up' : 'down';
+    this.scrollDirection = (this.prevScroll > window.pageYOffset) ? 'up' : 'down';
+    this.scrollInc = Math.abs(window.pageYOffset - this.prevScroll);
     this.prevScroll = window.pageYOffset;
     
     this.controlHeaderPosition();
+    this.controlNavPosition(true);
+  }
+  
+  controlHeaderPosition() {
+    // NOTE - setting attributes directly on element since React doesn't
+    // update the DOM fast enough, which results in choppy paint when the header
+    // becomes (un)locked.
     
+    // TODO - Update `maxHeaderY` if that value is based off responsive elements
+    // that could change height after a `resize`.
+    
+    if(window.pageYOffset >= this.maxHeaderY){
+      this.headerRef.current.classList.add('is--sticky');
+    }
+    else {
+      this.headerRef.current.classList.remove('is--sticky');
+    }
+  }
+  
+  controlNavPosition(fromScroll) {
     // NOTE - Use `fixed` position when stuck, use transform when
     //        transitioning between stick points.
     // NOTE - Top stickPoint will be an element's Y position plus it's height.
@@ -269,47 +305,126 @@ class App extends Component {
     //        offset and wrapper's Y offset and height.
 
     // Below, is in order of operation.
-
-    // DOWN ==================================================================
-      // [transition]
-      // IF - Wrapper bottom is not in view, AND nav bottom is not in view,
-      //      increment the Y offset based on scroll distance.
-
-      // [lock]
-      // IF - Wrapper bottom is not in view, AND nav bottom is in view, stick to
-      //      bottom stickPoint.
-
-      // [lock]
-      // IF - Wrapper bottom is in view, stick to wrapper bottom.
-
-    // UP ====================================================================
-      // [transition]
-      // IF - Wrapper top is not in view, AND nav top is not in view,
-      //      increment the Y offset based on scroll distance.
-
-      // [lock]
-      // IF - Wrapper top is not in view, AND nav top is in view, stick to
-      //      top stickPoint.
-
-      // [lock]
-      // IF - Wrapper top is in view, stick to wrapper top.
-  }
-  
-  controlHeaderPosition() {
-    // NOTE - setting attributes directly on element since React doesn't
-    // update the DOM fast enough, which results in choppy paint when the header
-    // becomes (un)locked.
     
-    // TODO - Update `maxHeaderY` if that value is based of responsive elements
-    // that could change height after a `resize`.
-    
-    if(window.pageYOffset >= this.maxHeaderY){
-      this.headerRef.current.classList.add('is--sticky');
-      this.headerIsLocked = true;
-    }
-    else if(this.headerIsLocked) {
-      this.headerRef.current.classList.remove('is--sticky');
-      this.headerIsLocked = false;
+    if(this.points){
+      
+      // TODO - create helper function to set style props. Maybe have it read
+      // current inlined attribute so that it can remove what isn't set.
+      
+      // DOWN ==================================================================
+      if(this.scrollDirection === 'down'){
+        // [scroll - with page]
+        if(
+          // IF - Wrapper bottom is not in view, AND nav bottom is not in view,
+          //      increment the Y offset based on scroll distance.
+          this.points.wrapperTop.visible
+          && this.points.navTop.visible
+          && this.points.navBtm.visible
+          // OR - No points are in view
+          || !this.points.wrapperTop.visible
+          && !this.points.navTop.visible
+          && !this.points.navBtm.visible
+        ){
+          this.leftNavRef.current.style.position = 'relative';
+          this.leftNavRef.current.style.top = null;
+          this.leftNavRef.current.style.bottom = null;
+        }
+        // [lock - to top]
+        else if(
+          // IF - The nav is visible in the viewport, just lock the top of the
+          // nav to the Results top. 
+          !this.points.wrapperTop.visible
+          && this.points.navTop.visible
+          && this.points.navBtm.visible
+        ){
+          this.leftNavRef.current.style.position = 'fixed';
+          this.leftNavRef.current.style.top = `${this.maxHeaderY + this.headerH}px`;
+          this.leftNavRef.current.style.bottom = null;
+          
+          // this.leftNavRef.current.style.webkitTransform = null;
+          // this.leftNavRef.current.style.transform = null;
+        }
+        // [lock - to viewport bottom]
+        else if(
+          // IF - Wrapper bottom is not in view, AND nav bottom is in view, stick
+          //      to bottom stickPoint.
+          this.points.navBtm.visible
+          && !this.points.wrapperBtm.visible
+          // OR - None of the points are in view (which could happen on page load)
+          //      stick to the bottom stickPoint.
+          || !this.points.pointsVisible
+        ){
+          this.leftNavRef.current.style.position = 'fixed';
+          this.leftNavRef.current.style.top = null;
+          this.leftNavRef.current.style.bottom = 0;
+          
+          // this.leftNavRef.current.style.webkitTransform = null;
+          // this.leftNavRef.current.style.transform = null;
+        }
+        // [lock - to wrapper bottom]
+        else if(
+          // IF - Wrapper bottom is in view, stick to wrapper bottom.
+          this.points.wrapperBtm.visible
+        ) {
+          this.leftNavRef.current.style.position = 'absolute';
+          this.leftNavRef.current.style.top = null;
+          this.leftNavRef.current.style.bottom = 0;
+          
+          // this.leftNavRef.current.style.webkitTransform = null;
+          // this.leftNavRef.current.style.transform = null;
+        }        
+      }
+      // UP ====================================================================
+      else {
+        
+        // [lock - to wrapper top]
+        if(
+          // IF - Wrapper top is in view, stick to wrapper top.
+          this.points.wrapperTop.visible
+        ){
+          this.leftNavRef.current.style.position = 'relative';
+          this.leftNavRef.current.style.top = null;
+          this.leftNavRef.current.style.bottom = null;
+        }
+        // [lock - to top]
+        else if(
+          // IF - Wrapper top is not in view, AND nav top is in view, stick to
+          //      top stickPoint.
+          this.points.navTop.visible
+          // && this.points.wrapperBtm.visible
+        ) {
+          this.leftNavRef.current.style.position = 'fixed';
+          this.leftNavRef.current.style.top = `${this.maxHeaderY + this.headerH}px`;
+          this.leftNavRef.current.style.bottom = null;
+        }
+        // [scroll - with page]
+        // IF - Wrapper bottom is in view, the nav should be locked to the
+        //      bottom so just let it behave as normal and scroll with the page.
+        else if(
+          this.points.navBtm.visible
+          && !this.points.wrapperBtm.visible
+        ){
+          
+          // this.leftNavRef.current.style.position = 'absolute';
+          // this.leftNavRef.current.style.top = null;
+          // console.log('scroll with page', this.points.navBtm);
+          // console.log(this.points.wrapperBtm.visible);
+          // this.leftNavRef.current.style.bottom = `${this.points.navBtm.y}px`;
+          
+          // console.log(this.leftNavRef.current.style.transform);
+          // const currentTranslation = this.leftNavRef.current.style.webkitTransform || this.leftNavRef.current.style.transform;
+          // const currentOffset = (currentTranslation) 
+          //   ? +currentTranslation.match(/translateY\((\d+)px\)/)[1]
+          //   : 0;
+          // const offset = `translateY(${currentOffset + this.scrollInc}px)`;
+          // this.leftNavRef.current.style.webkitTransform = offset;
+          // this.leftNavRef.current.style.transform = offset;
+        }
+        
+        // [transition]
+        // IF - Wrapper top is not in view, AND nav top is not in view,
+        //      increment the Y offset based on scroll distance.
+      }  
     }
   }
 
@@ -321,7 +436,6 @@ class App extends Component {
       filters,
       filterCount,
       filterChildCount,
-      headerH,
       productCount,
       products,
     } = this.state;
@@ -348,6 +462,7 @@ class App extends Component {
               <LeftNav
                 categories={categories}
                 filters={filters}
+                ref={this.leftNavRef}
               />
               <Results items={products} />
             </div>
