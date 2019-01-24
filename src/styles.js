@@ -88,7 +88,7 @@ export default {
       },
     },
 
-    ' .results': {
+    ' .results__wrapper': {
       flex: 1,
       paddingLeft: '1em',
     },

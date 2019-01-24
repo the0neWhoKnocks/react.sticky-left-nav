@@ -54,6 +54,7 @@ class LeftNav extends Component {
     const {
       categories,
       navRef,
+      wrapperRef,
     } = this.props;
     const {
       filters,
@@ -62,7 +63,10 @@ class LeftNav extends Component {
     const navModifier = (showClearFilters) ? 'show--clear' : '';
 
     return (
-      <div className={`left-nav-wrapper ${styles.root}`}>
+      <div
+        className={`left-nav-wrapper ${styles.root}`}
+        ref={wrapperRef}
+      >
         <Point className="left-nav__wrapper-top-point" type="wrapperTop" />
         <nav
           className={`left-nav ${navModifier}`}
@@ -117,12 +121,12 @@ class LeftNav extends Component {
               </Collapsible>
             );
           })}
-          <button
+          {/* <button
             className="left-nav__clear-btn"
             disabled={!showClearFilters}
           >
             Clear Filters
-          </button>
+          </button> */}
           <Point className="left-nav__btm-point" type="navBtm" />
         </nav>
 
@@ -132,4 +136,6 @@ class LeftNav extends Component {
   }
 }
 
-export default forwardRef((props, ref) => (<LeftNav {...props} navRef={ref} />));
+export default forwardRef((props, { navRef, wrapperRef }) => (
+  <LeftNav {...props} navRef={navRef} wrapperRef={wrapperRef} />
+));
