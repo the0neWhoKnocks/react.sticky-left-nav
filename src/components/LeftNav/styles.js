@@ -17,7 +17,6 @@ export default {
       paddingBottom: '3em',
       paddingLeft: `${filterFocusIndicatorWidth + filterFocusIndicatorOffset}px`,
       marginLeft: `-${filterFocusIndicatorWidth + filterFocusIndicatorOffset}px`,
-      overflow: 'hidden',
       position: 'relative',
 
       '&__category-link': {
