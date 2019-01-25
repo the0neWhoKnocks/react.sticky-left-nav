@@ -18,6 +18,7 @@ crosshair = crosshair.join(',');
 const diagonalLineThickness = 3;
 const LAYER1_INDEX = 9;
 const LAYER2_INDEX = 10;
+const NAV_WIDTH = 200;
 export default {
   app: css({
     font: '16px Helvetica, Arial, sans-serif',
@@ -65,13 +66,17 @@ export default {
     },
 
     ' .left-nav-wrapper': {
-      minWidth: '200px',
+      minWidth: `${NAV_WIDTH}px`,
       padding: '0 0 1em 1em',
     },
 
     ' .left-nav': {
       paddingTop: '0.3em',
       background: '#fff',
+      
+      '&__clear-btn': {
+        width: `${NAV_WIDTH}px`,
+      },
 
       '&__wrapper-top-point,&__top-point,&__wrapper-btm-point,&__btm-point': {
         position: 'absolute',
