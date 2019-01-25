@@ -1,49 +1,50 @@
 import React, { forwardRef, Component } from "react";
 import Collapsible from 'react-collapsible';
+import extend from 'extend';
 import Point from '../Point';
 import styles from "./styles";
 
 class LeftNav extends Component {
-  static getDerivedStateFromProps(props, state){
-    const currentFilters = JSON.stringify(state.filters);
-    const newFilters = JSON.stringify(props.filters);
-    const newState = {};
-
-    if(currentFilters !== newFilters){
-      newState.filters = props.filters;
-    }
-
-    return (Object.keys(newState).length > 0) ? newState : null;
-  }
-
   constructor(props) {
     super();
 
     this.state = {
-      filters: { ...props.filters },
       showClearFilters: false,
     };
+    this.filters = extend(true, {}, props.filters);
 
+    this.handleClearClick = this.handleClearClick.bind(this);
     this.handleFilterClick = this.handleFilterClick.bind(this);
   }
-
+  
+  handleClearClick() {
+    this.filters = extend(true, {}, this.props.filters);
+    
+    this.setState({
+      showClearFilters: false,
+    });
+  }
+  
   handleFilterClick(ev) {
     ev.preventDefault();
-
+    
+    const { onFilterClick } = this.props;
     const data = ev.currentTarget.dataset;
-    const state = { ...this.state };
-    const filter = state.filters[data.filter][data.filterNdx];
+    const filter = this.filters[data.filter][data.filterNdx];
     const selected = !filter.selected;
+    let showClearFilters = this.state.showClearFilters;
 
     if(selected){
-      state.showClearFilters = true;
+      showClearFilters = true;
     } else if(!selected && this.selectedFiltersCount - 1 === 0) {
-      state.showClearFilters = false;
+      showClearFilters = false;
     }
+    
+    this.filters[data.filter][data.filterNdx].selected = selected;
 
-    state.filters[data.filter][data.filterNdx].selected = selected;
-
-    this.setState(state);
+    this.setState({
+      showClearFilters,
+    }, onFilterClick);
   }
 
   noOp(ev) {
@@ -53,24 +54,27 @@ class LeftNav extends Component {
   render() {
     const {
       categories,
+      clearBtnStyles,
+      filters,
       navRef,
+      navStyles,
       wrapperRef,
     } = this.props;
     const {
-      filters,
       showClearFilters,
     } = this.state;
     const navModifier = (showClearFilters) ? 'show--clear' : '';
 
     return (
       <div
-        className={`left-nav-wrapper ${styles.root}`}
+        className={`left-nav-wrapper ${styles.root} ${navModifier}`}
         ref={wrapperRef}
       >
         <Point className="left-nav__wrapper-top-point" type="wrapperTop" />
         <nav
-          className={`left-nav ${navModifier}`}
+          className="left-nav"
           ref={navRef}
+          style={navStyles}
         >
           <Point className="left-nav__top-point" type="navTop" />
           {categories.map((item, ndx) => (
@@ -101,9 +105,10 @@ class LeftNav extends Component {
                 triggerOpenedClassName="left-nav__filter-group-btn title-font is--open"
               >
                 {group.map((filter, filterNdx) => {
-                  const modifier = (filter.selected) ? 'is--selected' : '';
-
-                  if(filter.selected) this.selectedFiltersCount += 1;
+                  const selected = this.filters[filterGroup][filterNdx].selected;
+                  const modifier = (selected) ? 'is--selected' : '';
+                  
+                  if(selected) this.selectedFiltersCount += 1;
 
                   return (
                     <a
@@ -121,15 +126,16 @@ class LeftNav extends Component {
               </Collapsible>
             );
           })}
-          {/* <button
-            className="left-nav__clear-btn"
-            disabled={!showClearFilters}
-          >
-            Clear Filters
-          </button> */}
           <Point className="left-nav__btm-point" type="navBtm" />
         </nav>
-
+        <button
+          className="left-nav__clear-btn"
+          disabled={!showClearFilters}
+          onClick={this.handleClearClick}
+          style={clearBtnStyles}
+        >
+          {`Clear (${this.selectedFiltersCount}) Filter${(this.selectedFiltersCount > 1) ? 's' : ''}`}
+        </button>
         <Point className="left-nav__wrapper-btm-point" type="wrapperBtm" />
       </div>
     );

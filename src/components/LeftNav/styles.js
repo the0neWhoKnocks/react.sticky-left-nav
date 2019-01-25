@@ -9,15 +9,17 @@ const link = {
 };
 const filterFocusIndicatorWidth = 4;
 const filterFocusIndicatorOffset = 8;
+const revealSpeed = '200ms';
 export default {
   root: css({
     position: 'relative',
+    overflow: 'hidden',
 
     ' .left-nav': {
-      paddingBottom: '3em',
       paddingLeft: `${filterFocusIndicatorWidth + filterFocusIndicatorOffset}px`,
       marginLeft: `-${filterFocusIndicatorWidth + filterFocusIndicatorOffset}px`,
       position: 'relative',
+      transition: `padding-bottom ${revealSpeed}`,
 
       '&__category-link': {
         ...link,
@@ -82,27 +84,28 @@ export default {
       },
 
       '&__clear-btn': {
-        width: 'calc(100% - 1em)',
         color: '#eee',
         padding: '0.5em 1em',
         border: 'none',
         background: '#333',
         cursor: 'pointer',
         position: 'absolute',
-        top: '100%',
+        bottom: '1em',
         left: '1em',
-        transform: 'translateY(0%)',
-        transition: 'transform 200ms',
+        transform: 'translateY(160%)',
+        transition: `transform ${revealSpeed}`,
       },
+    },
+    
+    '.show--clear': {
 
-      '.show--clear': {
-
-        ' .left-nav': {
-          '&__clear-btn': {
-            transform: 'translateY(-134%)',
-          },
+      ' .left-nav': {
+        paddingBottom: '3em',
+        
+        '&__clear-btn': {
+          transform: 'translateY(0%)',
         },
       },
-    }
+    },
   }),
 };

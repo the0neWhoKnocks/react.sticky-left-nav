@@ -138,9 +138,11 @@ class App extends Component {
 
     this.state = App.generateData({
       categoryCount: CATEGORY_COUNT,
+      clearBtnStyles: undefined,
       debug: false,
       filterCount: FILTER_COUNT,
       filterChildCount: FILTER_CHILD_COUNT,
+      navStyles: undefined,
       productCount: PRODUCT_COUNT,
       shelfOpened: false,
     });
@@ -154,8 +156,9 @@ class App extends Component {
     this.controlHeaderPosition = this.controlHeaderPosition.bind(this);
     this.handleCategoryCountChange = this.handleCategoryCountChange.bind(this);
     this.handleDebugToggle = this.handleDebugToggle.bind(this);
-    this.handleFilterCountChange = this.handleFilterCountChange.bind(this);
     this.handleFilterChildCountChange = this.handleFilterChildCountChange.bind(this);
+    this.handleFilterClick = this.handleFilterClick.bind(this);
+    this.handleFilterCountChange = this.handleFilterCountChange.bind(this);
     this.handleNavIntersection = this.handleNavIntersection.bind(this);
     this.handleProductCountChange = this.handleProductCountChange.bind(this);
     this.handleScroll = this.handleScroll.bind(this);
@@ -172,12 +175,10 @@ class App extends Component {
     this.maxHeaderY = this.topNavH;
     this.maxNavY = this.maxHeaderY + this.headerH;
     
+    this.scrollDirection = 'down';
+    
     this.headerRef.current.style.top = `${this.maxHeaderY}px`;
     this.headerRef.current.classList.add('sticky');
-    
-    // width has to be set because when the nav switches to a `fixed` width,
-    // the `flex` styling shrinks 
-    this.leftNavRef.current.style.width = `${this.leftNavW}px`;
 
     this.navObserver = new IntersectionObserver(
       this.handleNavIntersection,
@@ -205,6 +206,11 @@ class App extends Component {
     
     this.setState(App.generateData({
       ...App.getStateFromQueryString(this.state),
+      navStyles: {
+        // width has to be set because when the nav switches to a `fixed` width,
+        // the `flex` styling shrinks 
+        width: `${this.leftNavW}px`
+      }
     }));
   }
 
@@ -289,13 +295,17 @@ class App extends Component {
       value: filterChildCount,
     }));
   }
-
+  
+  handleFilterClick() {
+    this.controlNavPosition();
+  }
+  
   handleScroll() {
     this.scrollDirection = (this.prevScroll > window.pageYOffset) ? 'up' : 'down';
     this.prevScroll = window.pageYOffset;
     
     this.controlHeaderPosition();
-    this.controlNavPosition(true);
+    this.controlNavPosition();
   }
   
   controlHeaderPosition() {
@@ -314,53 +324,76 @@ class App extends Component {
     }
   }
   
-  setNavPosition(pos) {
-    window.requestAnimationFrame(() => {
-      // Ensure the setting of DOM props doesn't happen more often then it has to.
-      if(pos === this.navPos) return;
+  setClearBtnPosition(pos){
+    if(pos === this.clearBtnPos) return;
+    
+    const clearBtnStyles = {
+      position: 'fixed',
+    };
+    
+    switch(pos){
+      case navPositions.LOCK_TO_VIEWPORT_BOTTOM:
+        clearBtnStyles.position = 'fixed';
+        break;
       
-      const atts = {
-        position: null,
-        top: null,
-        bottom: null,
-      };
-      
-      switch(pos){
-        case navPositions.SCROLL:
-          const offsetY = this.leftNavRef.current.getBoundingClientRect().y - this.leftNavWrapperRef.current.getBoundingClientRect().y;
-          atts.position = 'absolute';
-          atts.top = `${offsetY}px`;
-          break;
-        
-        case navPositions.LOCK_TO_HEADER_BOTTOM:
-          atts.position = 'fixed';
-          atts.top = `${this.maxNavY}px`;
-          break;
-        
-        case navPositions.LOCK_TO_VIEWPORT_BOTTOM:
-          atts.position = 'fixed';
-          atts.bottom = 0;
-          break;
-        
-        case navPositions.LOCK_TO_WRAPPER_BOTTOM:
-          atts.position = 'absolute';
-          atts.bottom = 0;
-          break;
-        
-        default: // LOCK_TO_WRAPPER_TOP
-      }
-      
-      Object.keys(atts).forEach((att) => {
-        this.leftNavRef.current.style[att] = atts[att];
-      });
-      
-      this.navPos = pos;
-      
-      console.log(`Nav position = ${pos}`);
-    });
+      case navPositions.LOCK_TO_WRAPPER_BOTTOM:
+        clearBtnStyles.position = 'absolute';
+        break;
+    }
+    
+    this.clearBtnPos = pos;
+    
+    console.log(`Clear button position = ${pos}`);
+    
+    this.setState({ clearBtnStyles });
   }
   
-  controlNavPosition(fromScroll) {
+  setNavPosition(pos) {
+    // Ensure the setting of DOM props doesn't happen more often then it has to.
+    if(pos === this.navPos) return;
+    
+    const navStyles = { ...this.state.navStyles };
+    
+    switch(pos){
+      case navPositions.SCROLL:
+        const offsetY = this.leftNavRef.current.getBoundingClientRect().y - this.leftNavWrapperRef.current.getBoundingClientRect().y;
+        navStyles.position = 'absolute';
+        navStyles.top = `${offsetY}px`;
+        navStyles.bottom = null;
+        break;
+      
+      case navPositions.LOCK_TO_HEADER_BOTTOM:
+        navStyles.position = 'fixed';
+        navStyles.top = `${this.maxNavY}px`;
+        navStyles.bottom = null;
+        break;
+      
+      case navPositions.LOCK_TO_VIEWPORT_BOTTOM:
+        navStyles.position = 'fixed';
+        navStyles.top = null;
+        navStyles.bottom = 0;
+        break;
+      
+      case navPositions.LOCK_TO_WRAPPER_BOTTOM:
+        navStyles.position = 'absolute';
+        navStyles.top = null;
+        navStyles.bottom = 0;
+        break;
+      
+      default: // LOCK_TO_WRAPPER_TOP
+        navStyles.position = null;
+        navStyles.top = null;
+        navStyles.bottom = null;
+    }
+    
+    this.navPos = pos;
+    
+    console.log(`Nav position = ${pos}`);
+    
+    this.setState({ navStyles });
+  }
+  
+  controlNavPosition() {
     // don't do anything if the nav is taller than the Results
     if(this.resultsRef.current.offsetHeight < this.leftNavRef.current.offsetHeight) {
       this.setNavPosition();
@@ -392,6 +425,9 @@ class App extends Component {
     
             if(navBtmY >= wrapperBtmY){
               this.setNavPosition(navPositions.LOCK_TO_WRAPPER_BOTTOM);
+            }
+            else {
+              this.setNavPosition(navPositions.LOCK_TO_HEADER_BOTTOM);
             }
           }
           else {
@@ -442,6 +478,13 @@ class App extends Component {
             this.setNavPosition(navPositions.LOCK_TO_VIEWPORT_BOTTOM);
           }
         }
+        
+        
+        if(!this.points.wrapperBtm.visible){
+          this.setClearBtnPosition(navPositions.LOCK_TO_VIEWPORT_BOTTOM);
+        }else {
+          this.setClearBtnPosition(navPositions.LOCK_TO_WRAPPER_BOTTOM);
+        }
       }
       // UP ====================================================================
       else if(this.scrollDirection === 'up') {
@@ -479,6 +522,12 @@ class App extends Component {
         ){
           this.setNavPosition(navPositions.SCROLL);
         }
+        
+        if(
+          !this.points.wrapperBtm.visible
+        ){
+          this.setClearBtnPosition(navPositions.LOCK_TO_VIEWPORT_BOTTOM);
+        }
       }
     }
   }
@@ -487,10 +536,12 @@ class App extends Component {
     const {
       categories,
       categoryCount,
+      clearBtnStyles,
       debug,
       filters,
       filterCount,
       filterChildCount,
+      navStyles,
       productCount,
       products,
     } = this.state;
@@ -516,7 +567,10 @@ class App extends Component {
             <div className="results-interface">
               <LeftNav
                 categories={categories}
+                clearBtnStyles={clearBtnStyles}
                 filters={filters}
+                navStyles={navStyles}
+                onFilterClick={this.handleFilterClick}
                 ref={{
                   navRef: this.leftNavRef,
                   wrapperRef: this.leftNavWrapperRef,

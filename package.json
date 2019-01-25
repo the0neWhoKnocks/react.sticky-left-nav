@@ -5,6 +5,7 @@
   "keywords": [],
   "main": "src/index.js",
   "dependencies": {
+    "extend": "^3.0.2",
     "glamor": "2.20.40",
     "react": "16.5.2",
     "react-collapsible": "^2.3.2",
@@ -15,7 +16,7 @@
     "type": "git",
     "url": "git+https://the0newhoknocks.github.io/react.sticky-left-nav"
   },
-  "homepage" : "https://the0newhoknocks.github.io/react.sticky-left-nav/",
+  "homepage": "https://the0newhoknocks.github.io/react.sticky-left-nav/",
   "devDependencies": {
     "gh-pages": "^2.0.1"
   },
