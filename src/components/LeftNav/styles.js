@@ -9,7 +9,8 @@ const link = {
 };
 const filterFocusIndicatorWidth = 4;
 const filterFocusIndicatorOffset = 8;
-const revealSpeed = '200ms';
+export const TOGGLE_SPEED = 200;
+const revealSpeed = `${TOGGLE_SPEED}ms`;
 export default {
   root: css({
     position: 'relative',

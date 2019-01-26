@@ -81,7 +81,7 @@ export default {
       '&__wrapper-top-point,&__top-point,&__wrapper-btm-point,&__btm-point': {
         position: 'absolute',
         left: '50%',
-        transform: 'translateY(-50%)',
+        transform: 'translateX(-50%)',
       },
 
       '&__wrapper-top-point,&__top-point': {

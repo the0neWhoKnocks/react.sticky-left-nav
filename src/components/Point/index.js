@@ -7,6 +7,6 @@ export default ({
 }) => (
   <div
     className={`point ${styles.root} ${className}`}
-    data-type={type}
+    data-point-type={type}
   />
 );
