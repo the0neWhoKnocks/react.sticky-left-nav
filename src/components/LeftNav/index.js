@@ -2,7 +2,7 @@ import React, { forwardRef, Component } from "react";
 import Collapsible from 'react-collapsible';
 import extend from 'extend';
 import Point from '../Point';
-import styles from "./styles";
+import styles, { TOGGLE_SPEED } from "./styles";
 
 class LeftNav extends Component {
   constructor(props) {
@@ -15,20 +15,26 @@ class LeftNav extends Component {
 
     this.handleClearClick = this.handleClearClick.bind(this);
     this.handleFilterClick = this.handleFilterClick.bind(this);
+    this.handleFilterGroupToggle = this.handleFilterGroupToggle.bind(this);
   }
   
   handleClearClick() {
+    const { onClearBtnToggle } = this.props;
     this.filters = extend(true, {}, this.props.filters);
     
     this.setState({
       showClearFilters: false,
+    }, () => {
+      this.clearBtnTimer = setTimeout(() => {
+        onClearBtnToggle();
+      }, TOGGLE_SPEED);
     });
   }
   
   handleFilterClick(ev) {
     ev.preventDefault();
     
-    const { onFilterClick } = this.props;
+    const { onClearBtnToggle } = this.props;
     const data = ev.currentTarget.dataset;
     const filter = this.filters[data.filter][data.filterNdx];
     const selected = !filter.selected;
@@ -44,7 +50,18 @@ class LeftNav extends Component {
 
     this.setState({
       showClearFilters,
-    }, onFilterClick);
+    }, () => {
+      clearTimeout(this.clearBtnTimer);
+      this.clearBtnTimer = setTimeout(() => {
+        onClearBtnToggle();
+      }, TOGGLE_SPEED);
+    });
+  }
+  
+  handleFilterGroupToggle() {
+    const { onFilterGroupToggle } = this.props;
+    
+    onFilterGroupToggle();
   }
 
   noOp(ev) {
@@ -97,6 +114,8 @@ class LeftNav extends Component {
                 key={groupNdx}
                 className="left-nav__filter-group"
                 contentInnerClassName="left-nav__filter-group-content"
+                onOpen={this.handleFilterGroupToggle}
+                onClose={this.handleFilterGroupToggle}
                 openedClassName="left-nav__filter-group"
                 tabIndex={0}
                 transitionTime={200}

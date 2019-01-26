@@ -37,6 +37,14 @@ const navPositions = {
   LOCK_TO_WRAPPER_BOTTOM: 'lockToWrapperBottom',
 };
 
+const dummyLogger = {
+  log: () => {},
+};
+const debugLogger = {
+  log: window.console.log,
+};
+let logger = dummyLogger;
+
 const stickySupported = () => {
   const el = document.createElement('a');
   const mStyle = el.style;
@@ -157,9 +165,9 @@ class App extends Component {
     this.handleCategoryCountChange = this.handleCategoryCountChange.bind(this);
     this.handleDebugToggle = this.handleDebugToggle.bind(this);
     this.handleFilterChildCountChange = this.handleFilterChildCountChange.bind(this);
-    this.handleFilterClick = this.handleFilterClick.bind(this);
+    this.handleClearBtnToggle = this.handleClearBtnToggle.bind(this);
     this.handleFilterCountChange = this.handleFilterCountChange.bind(this);
-    this.handleNavIntersection = this.handleNavIntersection.bind(this);
+    this.handleFilterGroupToggle = this.handleFilterGroupToggle.bind(this);
     this.handleProductCountChange = this.handleProductCountChange.bind(this);
     this.handleScroll = this.handleScroll.bind(this);
   }
@@ -180,23 +188,12 @@ class App extends Component {
     this.headerRef.current.style.top = `${this.maxHeaderY}px`;
     this.headerRef.current.classList.add('sticky');
 
-    this.navObserver = new IntersectionObserver(
-      this.handleNavIntersection,
-      {
-        rootMargin: `-${this.topNavH + this.headerH}px 0px 0px 0px`,
-        threshold: 0,
-      }
-    );
-    this.pointEls = {
-      wrapperTop: document.querySelector('.left-nav__wrapper-top-point'),
-      wrapperBtm: document.querySelector('.left-nav__wrapper-btm-point'),
-      navTop: document.querySelector('.left-nav__top-point'),
-      navBtm: document.querySelector('.left-nav__btm-point'),
+    this.pointEls = document.querySelectorAll('[data-point-type]');
+    this.points = {};
+    this.navBounds = {
+      top: this.maxNavY,
+      bottom: window.innerHeight,
     };
-    this.navObserver.observe(this.pointEls.wrapperTop);
-    this.navObserver.observe(this.pointEls.wrapperBtm);
-    this.navObserver.observe(this.pointEls.navTop);
-    this.navObserver.observe(this.pointEls.navBtm);
 
     window.addEventListener('scroll', this.handleScroll, false);
     
@@ -211,7 +208,10 @@ class App extends Component {
         // the `flex` styling shrinks 
         width: `${this.leftNavW}px`
       }
-    }));
+    }), () => {
+      if(this.state.debug) logger = debugLogger;
+      this.handleScroll();
+    }); 
   }
 
   componentWillUnmount() {
@@ -221,6 +221,8 @@ class App extends Component {
 
   handleDebugToggle() {
     const debug = !this.state.debug;
+    
+    logger = (debug) ? debugLogger : dummyLogger;
 
     this.setState({
       debug,
@@ -229,29 +231,6 @@ class App extends Component {
       name: 'debug',
       value: debug,
     }));
-  }
-  
-  handleNavIntersection(entries) {
-    if(!this.points) this.points = {};
-    let pointsVisible = false;
-
-    entries.forEach((entry) => {
-      const type = entry.target.dataset.type;
-
-      if(!this.points[type]) this.points[type] = {};
-      
-      this.points[type].visible = !!entry.intersectionRatio;
-      this.points[type].bottom = entry.boundingClientRect.bottom;
-      this.points[type].y = entry.boundingClientRect.y;
-      
-      if(this.points[type].visible) {
-        pointsVisible = true;
-      }
-    });
-    
-    this.points.pointsVisible = pointsVisible;
-    
-    this.controlNavPosition();
   }
 
   handleProductCountChange(productCount) {
@@ -296,13 +275,50 @@ class App extends Component {
     }));
   }
   
-  handleFilterClick() {
-    this.controlNavPosition();
+  handleClearBtnToggle() {
+    this.controlNavPosition({ heightChanged: true });
+  }
+  
+  handleFilterGroupToggle() {
+    this.controlNavPosition({ heightChanged: true });
+  }
+  
+  /**
+   * Recalculate the bottom bounds to account for the bottom of the wrapper
+   * scrolling into view.
+   */
+  calcBounds() {
+    const btmPoint = document.querySelector('[data-point-type="wrapperBtm"]');
+    const rectY = btmPoint.getBoundingClientRect().y
+    
+    this.navBounds.bottom = (rectY < window.innerHeight)
+      ? rectY
+      : window.innerHeight;
   }
   
   handleScroll() {
     this.scrollDirection = (this.prevScroll > window.pageYOffset) ? 'up' : 'down';
     this.prevScroll = window.pageYOffset;
+    
+    this.calcBounds();
+    
+    let pointsVisible = false;
+    
+    for (let i=0; i<this.pointEls.length; i++) {
+      const point = this.pointEls[i];
+      const type = point.dataset.pointType;
+      const rect = point.getBoundingClientRect();
+      
+      if(!this.points[type]) this.points[type] = {};
+    
+      this.points[type].visible = rect.y >= this.navBounds.top && rect.y <= this.navBounds.bottom;
+      this.points[type].bottom = rect.bottom;
+      this.points[type].y = rect.y;
+    
+      if(this.points[type].visible) {
+        pointsVisible = true;
+      }
+    }
     
     this.controlHeaderPosition();
     this.controlNavPosition();
@@ -343,7 +359,7 @@ class App extends Component {
     
     this.clearBtnPos = pos;
     
-    console.log(`Clear button position = ${pos}`);
+    logger.log(`Clear button position = ${pos}`);
     
     this.setState({ clearBtnStyles });
   }
@@ -388,29 +404,57 @@ class App extends Component {
     
     this.navPos = pos;
     
-    console.log(`Nav position = ${pos}`);
+    logger.log(`Nav position = ${pos}`);
     
     this.setState({ navStyles });
   }
   
-  controlNavPosition() {
+  controlNavPosition({
+    heightChanged,
+  } = {}) {
     // don't do anything if the nav is taller than the Results
     if(this.resultsRef.current.offsetHeight < this.leftNavRef.current.offsetHeight) {
       this.setNavPosition();
       return;
     }
     
-    if(this.points){
-      const navFitsInView = this.leftNavRef.current.offsetHeight < window.innerHeight - this.maxNavY;
+    if(heightChanged) logger.log('heightChanged');
     
+    if(this.points){
+      const {
+        navBtm,
+        navTop,
+        pointsVisible,
+        wrapperBtm,
+        wrapperTop,
+      } = this.points;
+      const navFitsInView = this.leftNavRef.current.offsetHeight < this.navBounds.bottom - this.navBounds.top;
+      
+      // HEIGHT CHANGE =========================================================
+      if(heightChanged){
+        if(
+          !wrapperTop.visible
+          && navFitsInView
+        ){
+          this.setNavPosition(navPositions.LOCK_TO_HEADER_BOTTOM);
+        }
+        else if(
+          wrapperBtm.visible
+          && !navFitsInView
+          || wrapperBtm.visible
+          && navBtm.y > wrapperBtm.y
+        ){
+          this.setNavPosition(navPositions.LOCK_TO_WRAPPER_BOTTOM);
+        }
+      }
       // DOWN ==================================================================
-      if(this.scrollDirection === 'down'){
+      else if(this.scrollDirection === 'down'){
     
         // [lock - to header bottom]
         if(
           // IF - The top of the wrapper is hidden, and the nav can fit within
           //      the viewing area.
-          !this.points.wrapperTop.visible
+          !wrapperTop.visible
           && navFitsInView
         ) {
           // [lock - to wrapper bottom]
@@ -418,12 +462,9 @@ class App extends Component {
             // IF - The bottom of the wrapper is in view, and the nav fits
             //      within the viewing area, track the bottom of the wrapper
             //      and lock the nav to it once they overlap.
-            this.points.wrapperBtm.visible
+            wrapperBtm.visible
           ){
-            const navBtmY = this.pointEls.navBtm.getBoundingClientRect().y;
-            const wrapperBtmY = this.pointEls.wrapperBtm.getBoundingClientRect().y;
-    
-            if(navBtmY >= wrapperBtmY){
+            if(navBtm.y >= wrapperBtm.y){
               this.setNavPosition(navPositions.LOCK_TO_WRAPPER_BOTTOM);
             }
             else {
@@ -437,16 +478,17 @@ class App extends Component {
         // [scroll - with page]
         else if(
           // IF - The wrapper is visible, just scroll.
-          this.points.wrapperTop.visible
+          wrapperTop.visible
           // OR - The top of the nav is visible, but the top of the wrapper is
           //      not (the nav was locked to the top of the Results), so unlock
           //      it, and allow it to scroll with the page again.
-          || this.points.navTop.visible
-          && !this.points.wrapperTop.visible
+          || navTop.visible
+          && !wrapperTop.visible
           // OR - The nav was stuck to the top and needs to transition from the
           //      top to bottom point.
-          || !this.points.navTop.visible
-          && !this.points.navBtm.visible
+          || !navTop.visible
+          && !navBtm.visible
+          && !wrapperBtm.visible
         ){
           this.setNavPosition(navPositions.SCROLL);
         }
@@ -454,23 +496,20 @@ class App extends Component {
         else if(
           // IF - Wrapper bottom is not in view, AND nav bottom is in view, stick
           //      to bottom stickPoint.
-          this.points.navBtm.visible
-          && !this.points.wrapperTop.visible
+          navBtm.visible
+          && !wrapperTop.visible
           // OR - None of the points are in view (which could happen on page load)
           //      stick to the bottom stickPoint.
-          || !this.points.pointsVisible
+          || !pointsVisible
         ){
           // [lock - to wrapper bottom]
           if(
             // IF - The bottom of the wrapper is in view, and the nav doesn't
             //      fit within the viewing area, track the bottom of the wrapper
             //      and lock the nav to it once they overlap.
-            this.points.wrapperBtm.visible
+            wrapperBtm.visible
           ){
-            const navBtmY = this.pointEls.navBtm.getBoundingClientRect().y;
-            const wrapperBtmY = this.pointEls.wrapperBtm.getBoundingClientRect().y;
-    
-            if(navBtmY >= wrapperBtmY){
+            if(!navFitsInView){
               this.setNavPosition(navPositions.LOCK_TO_WRAPPER_BOTTOM);
             }
           }
@@ -480,7 +519,7 @@ class App extends Component {
         }
         
         
-        if(!this.points.wrapperBtm.visible){
+        if(!wrapperBtm.visible){
           this.setClearBtnPosition(navPositions.LOCK_TO_VIEWPORT_BOTTOM);
         }else {
           this.setClearBtnPosition(navPositions.LOCK_TO_WRAPPER_BOTTOM);
@@ -492,13 +531,13 @@ class App extends Component {
         // [lock - to wrapper top]
         if(
           // IF - Wrapper top is in view, stick to wrapper top.
-          this.points.wrapperTop.visible
+          wrapperTop.visible
         ){
           this.setNavPosition();
         }
         else if(
-          this.points.navTop.visible
-          && !this.points.wrapperTop.visible
+          navTop.visible
+          && !wrapperTop.visible
           && navFitsInView
         ) {
           this.setNavPosition(navPositions.LOCK_TO_HEADER_BOTTOM);
@@ -507,7 +546,7 @@ class App extends Component {
         else if(
           // IF - Wrapper top is not in view, AND nav top is in view, stick to
           //      top stickPoint.
-          this.points.navTop.visible
+          navTop.visible
         ) {
           this.setNavPosition(navPositions.LOCK_TO_HEADER_BOTTOM);
         }
@@ -517,14 +556,14 @@ class App extends Component {
           //      is not (the nav is locked to the bottom of the viewport), so
           //      pin the nav to it's current position relative to it's parent
           //      to allow for normal scrolling.
-          this.points.navBtm.visible
-          && !this.points.wrapperBtm.visible
+          navBtm.visible
+          && !wrapperBtm.visible
         ){
           this.setNavPosition(navPositions.SCROLL);
         }
         
         if(
-          !this.points.wrapperBtm.visible
+          !wrapperBtm.visible
         ){
           this.setClearBtnPosition(navPositions.LOCK_TO_VIEWPORT_BOTTOM);
         }
@@ -570,7 +609,8 @@ class App extends Component {
                 clearBtnStyles={clearBtnStyles}
                 filters={filters}
                 navStyles={navStyles}
-                onFilterClick={this.handleFilterClick}
+                onClearBtnToggle={this.handleClearBtnToggle}
+                onFilterGroupToggle={this.handleFilterGroupToggle}
                 ref={{
                   navRef: this.leftNavRef,
                   wrapperRef: this.leftNavWrapperRef,
