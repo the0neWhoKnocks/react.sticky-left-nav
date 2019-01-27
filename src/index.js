@@ -13,7 +13,7 @@ import ReactDOM from 'react-dom';
 import styles from './styles';
 import Banner from './components/Banner';
 import Footer from './components/Footer';
-import LeftNav from './components/LeftNav';
+import LeftNav, { TOGGLE_SPEED } from './components/LeftNav';
 import Results from './components/Results';
 import ResultsHeader from './components/ResultsHeader';
 import Toolbox, { DOCK_TO_RIGHT, Tools } from './components/Toolbox';
@@ -279,13 +279,25 @@ class App extends Component {
     this.controlNavPosition({ heightChanged: true });
   }
 
+  /**
+   * During a filter group's toggle animation, verify the nav has the correct
+   * sticking point. If this isn't checked at an interval during the animation,
+   * the nav could pop from bottom to top or visa versa. This makes the
+   * transition less jarring.
+   */
   handleFilterGroupToggle() {
-    // TODO - On start of the toggle animation, start a timer that runs at 10ms
-    // intervals and runs `controlNavPosition`, use the `TOGGLE_SPEED` from
-    // the LeftNav styles to determine how long to run the interval for. This
-    // should mitigate the pop in the nav's position when a toggle is opened/closed
-    // and the nav has to stick to the bottom or top.
-    this.controlNavPosition({ heightChanged: true });
+    const interval = 10; // check every X milliseconds
+    let total = 0;
+
+    const checkPos = () => {
+      if(total < TOGGLE_SPEED){
+        this.controlNavPosition({ heightChanged: true });
+        window.requestAnimationFrame(checkPos);
+      }
+      total += interval;
+    };
+
+    window.requestAnimationFrame(checkPos);
   }
 
   /**

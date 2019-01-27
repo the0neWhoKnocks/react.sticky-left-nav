@@ -114,11 +114,11 @@ class LeftNav extends Component {
                 key={groupNdx}
                 className="left-nav__filter-group"
                 contentInnerClassName="left-nav__filter-group-content"
-                onOpen={this.handleFilterGroupToggle}
-                onClose={this.handleFilterGroupToggle}
+                onOpening={this.handleFilterGroupToggle}
+                onClosing={this.handleFilterGroupToggle}
                 openedClassName="left-nav__filter-group"
                 tabIndex={0}
-                transitionTime={200}
+                transitionTime={TOGGLE_SPEED}
                 trigger={filterGroup}
                 triggerClassName="left-nav__filter-group-btn title-font"
                 triggerOpenedClassName="left-nav__filter-group-btn title-font is--open"
@@ -164,3 +164,6 @@ class LeftNav extends Component {
 export default forwardRef((props, { navRef, wrapperRef }) => (
   <LeftNav {...props} navRef={navRef} wrapperRef={wrapperRef} />
 ));
+export {
+  TOGGLE_SPEED,
+};
