@@ -93,7 +93,7 @@ export default {
       },
     },
 
-    ' .results__wrapper': {
+    ' .products__wrapper': {
       flex: 1,
       paddingLeft: '1em',
     },
