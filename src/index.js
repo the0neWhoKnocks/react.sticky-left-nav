@@ -16,6 +16,7 @@ import LeftNav, { TOGGLE_SPEED } from './components/LeftNav';
 import LeftNavPosition from './components/LeftNavPosition';
 import Products from './components/Products';
 import ResultsHeader from './components/ResultsHeader';
+import ResultsHeaderPosition from './components/ResultsHeaderPosition';
 import Toolbox, { DOCK_TO_RIGHT, Tools } from './components/Toolbox';
 import TopNav from './components/TopNav';
 import {
@@ -29,13 +30,6 @@ const CATEGORY_COUNT = 10;
 const FILTER_COUNT = 3;
 const FILTER_CHILD_COUNT = 5;
 const PRODUCT_COUNT = 24;
-
-const stickySupported = () => {
-  const el = document.createElement('a');
-  const mStyle = el.style;
-  mStyle.cssText = "position:sticky;position:-webkit-sticky;position:-ms-sticky;";
-  return mStyle.position.indexOf('sticky') !== -1;
-};
 
 class App extends Component {
   static parseQueryParams(params) {
@@ -134,6 +128,7 @@ class App extends Component {
       debug: false,
       filterCount: FILTER_COUNT,
       filterChildCount: FILTER_CHILD_COUNT,
+      headerTopBounds: undefined,
       navTopBounds: undefined,
       navBtmBounds: undefined,
       productCount: PRODUCT_COUNT,
@@ -144,13 +139,11 @@ class App extends Component {
     this.headerRef = createRef();
     this.productsRef = createRef();
 
-    this.controlHeaderPosition = this.controlHeaderPosition.bind(this);
     this.handleCategoryCountChange = this.handleCategoryCountChange.bind(this);
     this.handleDebugToggle = this.handleDebugToggle.bind(this);
     this.handleFilterChildCountChange = this.handleFilterChildCountChange.bind(this);
     this.handleFilterCountChange = this.handleFilterCountChange.bind(this);
     this.handleProductCountChange = this.handleProductCountChange.bind(this);
-    this.handleScroll = this.handleScroll.bind(this);
   }
 
   componentDidMount() {
@@ -158,30 +151,17 @@ class App extends Component {
   }
 
   init() {
-    this.headerH = this.headerRef.current.offsetHeight;
-    this.topNavH = this.topNavRef.current.offsetHeight;
-    this.maxHeaderY = this.topNavH;
-
-    this.headerRef.current.style.top = `${this.maxHeaderY}px`;
-    this.headerRef.current.classList.add('sticky');
-    
-    window.addEventListener('scroll', this.handleScroll, false);
-    
-    if(!stickySupported()){
-      window.Stickyfill.add(document.querySelectorAll('.sticky'));
-    }
+    const headerHeight = this.headerRef.current.offsetHeight;
+    const topNavHeight = this.topNavRef.current.offsetHeight;
     
     this.setState(App.generateData({
       ...App.getStateFromQueryString(this.state),
-      navTopBounds: this.maxHeaderY + this.headerH,
+      // TODO - Update `headerTopBounds` if that value is based off responsive elements
+      // that could change height after a `resize`.
+      headerTopBounds: topNavHeight,
+      navTopBounds: topNavHeight + headerHeight,
       navBtmBounds: window.innerHeight,
-    }), () => {
-      this.handleScroll();
-    });
-  }
-
-  componentWillUnmount() {
-    window.removeEventListener('scroll', this.handleScroll);
+    }));
   }
 
   handleDebugToggle() {
@@ -238,26 +218,6 @@ class App extends Component {
     }));
   }
 
-  handleScroll() {
-    this.controlHeaderPosition();
-  }
-
-  controlHeaderPosition() {
-    // NOTE - setting attributes directly on element since React doesn't
-    // update the DOM fast enough, which results in choppy paint when the header
-    // becomes (un)locked.
-
-    // TODO - Update `maxHeaderY` if that value is based off responsive elements
-    // that could change height after a `resize`.
-    
-    if(window.pageYOffset >= this.maxHeaderY){
-      this.headerRef.current.classList.add('is--sticky');
-    }
-    else {
-      this.headerRef.current.classList.remove('is--sticky');
-    }
-  }
-
   render() {
     const {
       categories,
@@ -266,6 +226,7 @@ class App extends Component {
       filters,
       filterCount,
       filterChildCount,
+      headerTopBounds,
       navBtmBounds,
       navTopBounds,
       productCount,
@@ -286,10 +247,15 @@ class App extends Component {
           />
           <div className="body">
             <Banner />
-            <ResultsHeader
-              ref={this.headerRef}
-              title="Results Title"
-            />
+            <ResultsHeaderPosition
+              boundsTop={headerTopBounds}
+              headerRef={this.headerRef}
+            >
+              <ResultsHeader
+                ref={this.headerRef}
+                title="Results Title"
+              />
+            </ResultsHeaderPosition>
             <div className="results-interface">
               <LeftNavPosition
                 boundsBottom={navBtmBounds}
