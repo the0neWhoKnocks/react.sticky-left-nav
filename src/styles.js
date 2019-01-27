@@ -112,6 +112,7 @@ export default {
       
       ' .left-nav-wrapper': {
         backgroundColor: '#ddd',
+        backgroundAttachment: 'fixed',
         backgroundImage: `repeating-linear-gradient(
           -45deg,
           #ddd,

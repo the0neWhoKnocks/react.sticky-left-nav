@@ -25,9 +25,11 @@ class LeftNav extends Component {
     this.setState({
       showClearFilters: false,
     }, () => {
-      this.clearBtnTimer = setTimeout(() => {
-        onClearBtnToggle();
-      }, TOGGLE_SPEED);
+      if(onClearBtnToggle){
+        this.clearBtnTimer = setTimeout(() => {
+          onClearBtnToggle();
+        }, TOGGLE_SPEED);
+      }
     });
   }
   
@@ -51,17 +53,19 @@ class LeftNav extends Component {
     this.setState({
       showClearFilters,
     }, () => {
-      clearTimeout(this.clearBtnTimer);
-      this.clearBtnTimer = setTimeout(() => {
-        onClearBtnToggle();
-      }, TOGGLE_SPEED);
+      if(onClearBtnToggle){
+        clearTimeout(this.clearBtnTimer);
+        this.clearBtnTimer = setTimeout(() => {
+          onClearBtnToggle();
+        }, TOGGLE_SPEED);
+      }
     });
   }
   
   handleFilterGroupToggle() {
     const { onFilterGroupToggle } = this.props;
     
-    onFilterGroupToggle();
+    if(onFilterGroupToggle) onFilterGroupToggle();
   }
 
   noOp(ev) {
@@ -161,9 +165,13 @@ class LeftNav extends Component {
   }
 }
 
-export default forwardRef((props, { navRef, wrapperRef }) => (
-  <LeftNav {...props} navRef={navRef} wrapperRef={wrapperRef} />
-));
+export default forwardRef((props, refs) => {
+  // Can't just set `refs` to a default value because it gets returned as null.
+  const _refs = (!refs) ? {} : refs;
+  const { navRef, wrapperRef } = _refs;
+  
+  return <LeftNav {...props} navRef={navRef} wrapperRef={wrapperRef} />;
+});
 export {
   TOGGLE_SPEED,
 };
