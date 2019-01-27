@@ -14,7 +14,7 @@ import Banner from './components/Banner';
 import Footer from './components/Footer';
 import LeftNav, { TOGGLE_SPEED } from './components/LeftNav';
 import LeftNavPosition from './components/LeftNavPosition';
-import Results from './components/Results';
+import Products from './components/Products';
 import ResultsHeader from './components/ResultsHeader';
 import Toolbox, { DOCK_TO_RIGHT, Tools } from './components/Toolbox';
 import TopNav from './components/TopNav';
@@ -142,7 +142,7 @@ class App extends Component {
 
     this.topNavRef = createRef();
     this.headerRef = createRef();
-    this.resultsRef = createRef();
+    this.productsRef = createRef();
 
     this.controlHeaderPosition = this.controlHeaderPosition.bind(this);
     this.handleCategoryCountChange = this.handleCategoryCountChange.bind(this);
@@ -295,7 +295,7 @@ class App extends Component {
                 boundsBottom={navBtmBounds}
                 boundsTop={navTopBounds}
                 debug={debug}
-                sibling={this.resultsRef.current}
+                sibling={this.productsRef.current}
                 toggleSpeed={TOGGLE_SPEED}
               >
                 <LeftNav
@@ -303,8 +303,8 @@ class App extends Component {
                   filters={filters}
                 />
               </LeftNavPosition>
-              <div className="results__wrapper">
-                <Results items={products} ref={this.resultsRef} />
+              <div className="products__wrapper">
+                <Products items={products} ref={this.productsRef} />
               </div>
             </div>
           </div>
