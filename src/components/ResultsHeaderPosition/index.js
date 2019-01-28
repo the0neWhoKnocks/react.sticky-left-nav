@@ -18,17 +18,9 @@ class ResultsHeaderPosition extends Component {
   }
   
   componentDidMount() {
-    const { headerRef } = this.props;
-    
-    this.setHeaderPosition();
-    
     window.addEventListener('scroll', this.handleScroll, false);
     
-    if(!stickySupported()){
-      headerRef.current.classList.add('sticky');
-      window.Stickyfill.add(document.querySelectorAll('.sticky'));
-    }
-    
+    this.setHeaderPosition();
     this.handleScroll();
   }
   
@@ -48,7 +40,20 @@ class ResultsHeaderPosition extends Component {
       headerRef,
     } = this.props;
     
-    headerRef.current.style.top = `${boundsTop}px`;
+    if(boundsTop){
+      headerRef.current.style.top = `${boundsTop}px`;
+      
+      if(!stickySupported()){
+        if(!this.stickyAdded){
+          headerRef.current.classList.add('sticky');
+          window.Stickyfill.add(document.querySelectorAll('.sticky'));
+          this.stickyAdded = true;
+        }
+        else {
+          window.Stickyfill.refreshAll();
+        }
+      }
+    }
   }
   
   handleScroll() {

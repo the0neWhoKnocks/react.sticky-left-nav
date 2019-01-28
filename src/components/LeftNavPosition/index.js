@@ -142,7 +142,7 @@ class LeftNavPosition extends Component {
    */
   calcBounds() {
     const btmPoint = document.querySelector('.left-nav-wrapper [data-point-type="wrapperBtm"]');
-    const rectY = btmPoint.getBoundingClientRect().y;
+    const rectY = btmPoint.getBoundingClientRect().top;
   
     this.navBounds.bottom = (rectY < window.innerHeight)
       ? rectY
@@ -163,8 +163,8 @@ class LeftNavPosition extends Component {
 
       if(!this.points[type]) this.points[type] = {};
 
-      this.points[type].visible = rect.y >= this.navBounds.top && rect.y <= this.navBounds.bottom;
-      this.points[type].y = rect.y;
+      this.points[type].visible = rect.top >= this.navBounds.top && rect.top <= this.navBounds.bottom;
+      this.points[type].y = rect.top;
     }
 
     this.controlNavPosition();
@@ -202,7 +202,7 @@ class LeftNavPosition extends Component {
 
     switch(pos){
       case navPositions.SCROLL:
-        const offsetY = this.leftNavRef.current.getBoundingClientRect().y - this.leftNavWrapperRef.current.getBoundingClientRect().y;
+        const offsetY = this.leftNavRef.current.getBoundingClientRect().top - this.leftNavWrapperRef.current.getBoundingClientRect().top;
         navStyles.position = 'absolute';
         navStyles.top = `${offsetY}px`;
         navStyles.bottom = null;
