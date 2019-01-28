@@ -1,6 +1,10 @@
 # Variable Position Sticky Nav
 
-Tested and verified in: 
+Tested and verified in:
+<img src="./docs/imgs/chrome.svg" width="16" title="Chrome" alt="chrome icon" />
+<img src="./docs/imgs/firefox.svg" width="16" title="Firefox" alt="firefox icon" />
+<img src="./docs/imgs/safari.svg" width="16" title="Safari" alt="safari icon" />
+<img src="./docs/imgs/explorer.svg" width="16" title="IE11" alt="explorer icon" />
 
 View the [demo here](https://the0newhoknocks.github.io/react.sticky-left-nav/).
 
