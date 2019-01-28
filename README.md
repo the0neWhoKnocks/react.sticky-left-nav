@@ -1,5 +1,7 @@
 # Variable Position Sticky Nav
 
+Tested and verified in: 
+
 View the [demo here](https://the0newhoknocks.github.io/react.sticky-left-nav/).
 
 ---
@@ -36,7 +38,7 @@ Create a UI that:
 
 ## What Worked
 
-- Used `position: sticky` for the header so that 
+- Used `position: sticky` for the header to prevent choppy transition.
   - Loading a polyfill for IE11
 - Position/bounds detection for nav while scrolling
 - Creating `Position` components that separate the business logic from the
