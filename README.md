@@ -48,6 +48,9 @@ Create a UI that:
 - Creating `Position` components that separate the business logic from the
   actual component. That way layout can be addressed differently in other
   experiences but the underlying functionality will remain.
+- Creating a very simplistic Storbook-esque GUI (the tab at the center right)
+  to allow for adding variable amounts of products, categories, filter groups,
+  and filter items.
 
 ---
 
