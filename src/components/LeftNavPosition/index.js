@@ -278,6 +278,14 @@ class LeftNavPosition extends Component {
         ){
           this.setNavPosition(navPositions.LOCK_TO_WRAPPER_BOTTOM);
         }
+        else if(
+          navBtm.visible
+          && !wrapperTop.visible
+          || !navWithinBounds
+          && !wrapperBtm.visible
+        ){
+          this.setNavPosition(navPositions.LOCK_TO_BOUNDS_BOTTOM);
+        }
       }
       // DOWN ==================================================================
       else if(this.scrollDirection === 'down'){
