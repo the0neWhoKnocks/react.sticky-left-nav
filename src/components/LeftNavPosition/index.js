@@ -127,6 +127,7 @@ class LeftNavPosition extends Component {
 
     const checkPos = () => {
       if(total < toggleSpeed){
+        this.calcPoints();
         this.controlNavPosition({ heightChanged: true });
         window.requestAnimationFrame(checkPos);
       }
@@ -149,13 +150,7 @@ class LeftNavPosition extends Component {
       : window.innerHeight;
   }
   
-  handleScroll() {
-    this.scrollDirection = (this.prevScroll > window.pageYOffset) ? 'up' : 'down';
-    this.scrollAmount = Math.abs(window.pageYOffset - this.prevScroll);
-    this.prevScroll = window.pageYOffset;
-
-    this.calcBounds();
-    
+  calcPoints() {
     for (let i=0; i<this.pointEls.length; i++) {
       const point = this.pointEls[i];
       const type = point.dataset.pointType;
@@ -166,6 +161,15 @@ class LeftNavPosition extends Component {
       this.points[type].visible = rect.top >= this.navBounds.top && rect.top <= this.navBounds.bottom;
       this.points[type].y = rect.top;
     }
+  }
+  
+  handleScroll() {
+    this.scrollDirection = (this.prevScroll > window.pageYOffset) ? 'up' : 'down';
+    this.scrollAmount = Math.abs(window.pageYOffset - this.prevScroll);
+    this.prevScroll = window.pageYOffset;
+
+    this.calcBounds();
+    this.calcPoints();
 
     this.controlNavPosition();
   }
@@ -264,6 +268,7 @@ class LeftNavPosition extends Component {
       
       // HEIGHT CHANGE =========================================================
       if(heightChanged){
+        console.log(navBtm.visible);
         if(
           !wrapperTop.visible
           && navFitsInView
@@ -281,8 +286,6 @@ class LeftNavPosition extends Component {
         else if(
           navBtm.visible
           && !wrapperTop.visible
-          || !navWithinBounds
-          && !wrapperBtm.visible
         ){
           this.setNavPosition(navPositions.LOCK_TO_BOUNDS_BOTTOM);
         }
