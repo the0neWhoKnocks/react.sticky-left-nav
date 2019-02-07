@@ -11,7 +11,6 @@ class LeftNav extends Component {
     this.state = {
       showClearFilters: false,
     };
-    this.filters = extend(true, {}, props.filters);
 
     this.handleClearClick = this.handleClearClick.bind(this);
     this.handleFilterClick = this.handleFilterClick.bind(this);
@@ -128,7 +127,7 @@ class LeftNav extends Component {
                 triggerOpenedClassName="left-nav__filter-group-btn title-font is--open"
               >
                 {group.map((filter, filterNdx) => {
-                  const selected = this.filters[filterGroup][filterNdx].selected;
+                  const selected = filters[filterGroup][filterNdx].selected;
                   const modifier = (selected) ? 'is--selected' : '';
                   
                   if(selected) this.selectedFiltersCount += 1;
