@@ -161,6 +161,8 @@ class LeftNavPosition extends Component {
       this.points[type].visible = rect.top >= this.navBounds.top && rect.top <= this.navBounds.bottom;
       this.points[type].y = rect.top;
     }
+    
+    this.points.hasLength = true;
   }
   
   handleScroll() {
@@ -168,10 +170,11 @@ class LeftNavPosition extends Component {
     this.scrollAmount = Math.abs(window.pageYOffset - this.prevScroll);
     this.prevScroll = window.pageYOffset;
 
-    this.calcBounds();
-    this.calcPoints();
-
-    this.controlNavPosition();
+    window.requestAnimationFrame(() => {
+      this.calcBounds();
+      this.calcPoints();
+      this.controlNavPosition();
+    });
   }
   
   setClearBtnPosition(pos){
@@ -256,7 +259,7 @@ class LeftNavPosition extends Component {
 
     if(heightChanged) this.logger.log('heightChanged');
     
-    if(this.points){
+    if(this.points.hasLength){
       const {
         navBtm,
         navTop,
@@ -268,7 +271,6 @@ class LeftNavPosition extends Component {
       
       // HEIGHT CHANGE =========================================================
       if(heightChanged){
-        console.log(navBtm.visible);
         if(
           !wrapperTop.visible
           && navFitsInView
