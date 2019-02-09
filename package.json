@@ -10,7 +10,8 @@
     "react": "16.5.2",
     "react-collapsible": "^2.3.2",
     "react-dom": "16.5.2",
-    "react-scripts": "2.0.3"
+    "react-scripts": "2.0.3",
+    "stickyfilljs": "^2.1.0"
   },
   "repository": {
     "type": "git",

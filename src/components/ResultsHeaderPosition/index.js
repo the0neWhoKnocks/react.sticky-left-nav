@@ -2,13 +2,7 @@ import React, {
   Component,
   Fragment,
 } from 'react';
-
-const stickySupported = () => {
-  const el = document.createElement('a');
-  const mStyle = el.style;
-  mStyle.cssText = "position:sticky;position:-webkit-sticky;position:-ms-sticky;";
-  return mStyle.position.indexOf('sticky') !== -1;
-};
+import loadStickyPolyfill from 'utils/loadStickyPolyfill';
 
 class ResultsHeaderPosition extends Component {
   constructor(props) {
@@ -18,10 +12,7 @@ class ResultsHeaderPosition extends Component {
   }
   
   componentDidMount() {
-    window.addEventListener('scroll', this.handleScroll, false);
-    
-    this.setHeaderPosition();
-    this.handleScroll();
+    loadStickyPolyfill().then(() => this.init());
   }
   
   componentWillUnmount() {
@@ -34,23 +25,29 @@ class ResultsHeaderPosition extends Component {
     if(boundsTop !== prevProps.boundsTop) this.setHeaderPosition();
   }
   
+  init() {
+    window.addEventListener('scroll', this.handleScroll, false);
+    this.setHeaderPosition();
+    this.handleScroll();
+  }
+  
   setHeaderPosition() {
     const {
       boundsTop,
       headerRef,
     } = this.props;
     
-    if(boundsTop){
+    if(boundsTop !== undefined){
+      if (this.sticky) {
+        this.sticky.remove();
+        this.sticky = null;
+      }
+
       headerRef.current.style.top = `${boundsTop}px`;
-      
-      if(!stickySupported()){
-        if(!this.stickyAdded){
-          headerRef.current.classList.add('sticky');
-          window.Stickyfill.add(document.querySelectorAll('.sticky'));
-          this.stickyAdded = true;
-        }
-        else {
-          window.Stickyfill.refreshAll();
+
+      if (window.Stickyfill) {
+        if (!this.sticky) {
+          this.sticky = new window.Stickyfill.Sticky(headerRef.current);
         }
       }
     }
